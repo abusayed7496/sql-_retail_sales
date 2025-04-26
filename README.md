@@ -172,44 +172,62 @@ GROUP BY 1, 2
 WHERE rank = 1
 ```
 
-8. **Write a SQL query to find the top 5 customers based on the highest total sales **:
+--7.Write a SQL query to calculate the average sale for each month. Find out best selling month in each year:
+WITH monthly_avg_sales AS (
+```sql
+WITH monthly_avg_sales AS (
+    SELECT 
+        EXTRACT(YEAR FROM sale_date) AS year,
+        EXTRACT(MONTH FROM sale_date) AS month,
+        AVG(total_sale) AS avg_sale
+    FROM 
+        retail_sales
+    GROUP BY 
+        1, 2
+)
+SELECT 
+    year,
+    month,
+    avg_sale,
+    RANK() OVER (PARTITION BY year ORDER BY avg_sale DESC) AS month_rank
+FROM 
+    monthly_avg_sales
+ORDER BY 
+    year, month_rank;
+
+```
+
+--8.Write a SQL query to find the top 5 customers based on the highest total sales--
+SELECT 
 ```sql
 SELECT 
     customer_id,
-    SUM(total_sale) as total_sales
-FROM retail_sales
-GROUP BY 1
-ORDER BY 2 DESC
-LIMIT 5
+    SUM(total_sale) AS total_sales
+FROM 
+    retail_sales
+GROUP BY 
+    customer_id
+ORDER BY 
+    total_sales DESC
+LIMIT 5;
 ```
 
-9. **Write a SQL query to find the number of unique customers who purchased items from each category.**:
+--9.What is the distribution of sales orders across different time shifts (Morning, Afternoon, Evening) for each category?--:
 ```sql
 SELECT 
-    category,    
-    COUNT(DISTINCT customer_id) as cnt_unique_cs
-FROM retail_sales
-GROUP BY category
-```
-
-10. **Write a SQL query to create each shift and number of orders (Example Morning <12, Afternoon Between 12 & 17, Evening >17)**:
-```sql
-WITH hourly_sale
-AS
-(
-SELECT *,
-    CASE
-        WHEN EXTRACT(HOUR FROM sale_time) < 12 THEN 'Morning'
-        WHEN EXTRACT(HOUR FROM sale_time) BETWEEN 12 AND 17 THEN 'Afternoon'
+    CASE 
+        WHEN EXTRACT(HOUR FROM sale_date::timestamp) < 12 THEN 'Morning'
+        WHEN EXTRACT(HOUR FROM sale_date::timestamp) BETWEEN 12 AND 17 THEN 'Afternoon'
         ELSE 'Evening'
-    END as shift
-FROM retail_sales
-)
-SELECT 
-    shift,
-    COUNT(*) as total_orders    
-FROM hourly_sale
-GROUP BY shift
+    END AS shift,
+    COUNT(*) AS number_of_orders
+FROM 
+    retail_sales
+GROUP BY 
+    shift
+ORDER BY 
+    shift;
+
 ```
 
 ## Findings
